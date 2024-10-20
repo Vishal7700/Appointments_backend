@@ -49,36 +49,51 @@ module.exports.deleteDoctor = async (req, res) => {
     }
 }
 
+
 module.exports.getAllDoctors = async (req, res) => {
-
     try {
-
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const startIndex = (page - 1) * limit;
 
-        let doctors = await doctorModel.find()
+        // Get the search name from the query parameters
+        const searchName = req.query.name;
+
+        // Build the query object
+        let query = {};
+
+        // If a search name is provided, use a regex for case-insensitive searching
+        if (searchName) {
+            const regex = new RegExp(searchName, 'i'); // 'i' for case-insensitive
+            query.name = { $regex: regex }; // Update the query to include the name search
+        }
+
+        // Count documents matching the query first
+        let count = await doctorModel.countDocuments(query); // Count documents matching the query
+        const totalPages = Math.ceil(count / limit); // Calculate total pages
+
+        // Check if the requested page is valid
+        if (page > totalPages) {
+            return res.status(200).json({ doctors: [], totalPages }); // Return empty array if page is out of range
+        }
+
+        // Find doctors with the constructed query, applying pagination
+        let doctors = await doctorModel.find(query)
             .skip(startIndex)
             .limit(limit);
 
-        if (!doctors || doctors.length === 0) {
-            return res.status(404).send('No doctors found');
-        }
-
-        let count = await doctorModel.countDocuments();
-        const totalPages = Math.ceil(count / limit);
-
-        res.send({
+        res.status(200).send({
             doctors,
             totalDoctors: count,
             currentPage: page,
             totalPages: totalPages
         });
-        
+
     } catch (err) {
         return res.status(500).send(err.message);
     }
 }
+
 
 module.exports.getDoctorById = async (req, res) => {
     try {
@@ -91,21 +106,6 @@ module.exports.getDoctorById = async (req, res) => {
     } catch (err) {
         return res.status(500).send(err.message);
     }
-}
-
-module.exports.getDoctorsByName = async (req, res) => {
-
-    try {
-        let doctor = await doctorModel.find({ name: req.query.name });
-
-        if (!doctor || doctor.length === 0) {
-            return res.status(404).send('No doctors found');
-        }
-
-        return res.status(200).send(doctor);
-
-    } catch (err) { }
-    return res.status(500).send(err.message);
 }
 
 module.exports.updateDoctor = async (req, res) => {

@@ -273,8 +273,8 @@ router.delete("/delete-doctor/:id", isLoggedIn, deleteDoctor);
  * @swagger
  * /admin/doctors:
  *   get:
- *     summary: Get all doctors with pagination
- *     description: Fetch a list of doctors with pagination options.
+ *     summary: Get all doctors with pagination and optional name search
+ *     description: Retrieves a paginated list of doctors. You can optionally filter doctors by name using the query parameter `name`. The response includes the current page, total number of doctors, and total pages available.
  *     tags:
  *       - Doctors
  *     parameters:
@@ -282,19 +282,22 @@ router.delete("/delete-doctor/:id", isLoggedIn, deleteDoctor);
  *         name: page
  *         schema:
  *           type: integer
- *           minimum: 1
- *         required: false
- *         description: The page number to retrieve (default is 1).
+ *           default: 1
+ *         description: The page number to retrieve. Default is 1.
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
- *           minimum: 1
- *         required: false
- *         description: The number of doctors to return per page (default is 10).
+ *           default: 10
+ *         description: The number of doctors to return per page. Default is 10.
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: Optional search term to filter doctors by name.
  *     responses:
  *       200:
- *         description: A list of doctors
+ *         description: A list of doctors and pagination information.
  *         content:
  *           application/json:
  *             schema:
@@ -303,19 +306,30 @@ router.delete("/delete-doctor/:id", isLoggedIn, deleteDoctor);
  *                 doctors:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Doctor'
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       phonenumber:
+ *                         type: string
  *                 totalDoctors:
  *                   type: integer
+ *                   description: The total number of doctors available.
  *                 currentPage:
  *                   type: integer
+ *                   description: The current page number being retrieved.
  *                 totalPages:
  *                   type: integer
+ *                   description: The total number of pages available based on the limit.
  *       404:
- *         description: No doctors found
+ *         description: No doctors found.
  *       500:
- *         description: Server error
+ *         description: Server error.
  */
 router.get("/doctors", isLoggedIn, getAllDoctors);
+
 
 /**
  * @swagger
@@ -371,37 +385,6 @@ router.get("/doctors", isLoggedIn, getAllDoctors);
  *               example: "Error message here"
  */
 router.get("/doctor/:id", isLoggedIn, getDoctorById);
-
-/**
- * @swagger
- * /doctor:
- *   get:
- *     summary: Get doctors by name
- *     description: Fetch a list of doctors filtered by their name
- *     tags:
- *       - Doctors
- *     parameters:
- *       - in: query
- *         name: name
- *         schema:
- *           type: string
- *         required: true
- *         description: The name of the doctor to search for
- *     responses:
- *       200:
- *         description: A list of doctors
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Doctor'
- *       404:
- *         description: No doctors found
- *       500:
- *         description: Server error
- */
-router.get("/search/", isLoggedIn, getDoctorsByName)
 
 
 /**
@@ -473,7 +456,7 @@ router.get("/search/", isLoggedIn, getDoctorsByName)
  *       500:
  *         description: Internal server error
  */
-router.put("/update-doctor/:id", isLoggedIn, upload.single("profilePhoto") , updateDoctor);
+router.put("/update-doctor/:id", isLoggedIn, upload.single("profilePhoto"), updateDoctor);
 
 
 
