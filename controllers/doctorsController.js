@@ -50,19 +50,31 @@ module.exports.deleteDoctor = async (req, res) => {
 }
 
 module.exports.getAllDoctors = async (req, res) => {
+
     try {
-        let doctors = await doctorModel.find();
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const startIndex = (page - 1) * limit;
+
+        let doctors = await doctorModel.find()
+            .skip(startIndex)
+            .limit(limit);
 
         if (!doctors || doctors.length === 0) {
             return res.status(404).send('No doctors found');
         }
 
         let count = await doctorModel.countDocuments();
+        const totalPages = Math.ceil(count / limit);
 
         res.send({
             doctors,
-            totalDoctors: count
+            totalDoctors: count,
+            currentPage: page,
+            totalPages: totalPages
         });
+        
     } catch (err) {
         return res.status(500).send(err.message);
     }
@@ -79,6 +91,21 @@ module.exports.getDoctorById = async (req, res) => {
     } catch (err) {
         return res.status(500).send(err.message);
     }
+}
+
+module.exports.getDoctorsByName = async (req, res) => {
+
+    try {
+        let doctor = await doctorModel.find({ name: req.query.name });
+
+        if (!doctor || doctor.length === 0) {
+            return res.status(404).send('No doctors found');
+        }
+
+        return res.status(200).send(doctor);
+
+    } catch (err) { }
+    return res.status(500).send(err.message);
 }
 
 module.exports.updateDoctor = async (req, res) => {
@@ -99,7 +126,7 @@ module.exports.updateDoctor = async (req, res) => {
         let updatedDoctor = await doctorModel.findOneAndUpdate(
             { id: req.params._id },
             updateFields,
-            { new: true}
+            { new: true }
         );
 
         if (!updatedDoctor) {

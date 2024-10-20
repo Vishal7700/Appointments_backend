@@ -3,7 +3,7 @@ const router = express.Router();
 const { isLoggedIn } = require("../middlewares/isLoggedIn");
 const { createAdmin } = require("../controllers/authControllerAdmin");
 const { adminLogin } = require("../controllers/authControllerAdmin");
-const { addDoctor, deleteDoctor, getAllDoctors, getDoctorById, updateDoctor } = require("../controllers/doctorsController");
+const { addDoctor, deleteDoctor, getAllDoctors, getDoctorById, updateDoctor, getDoctorsByName } = require("../controllers/doctorsController");
 const upload = require("../config/multer-config")
 
 
@@ -271,65 +271,49 @@ router.delete("/delete-doctor/:id", isLoggedIn, deleteDoctor);
 
 /**
  * @swagger
- * admin/doctors:
+ * /admin/doctors:
  *   get:
- *     summary: Get All Doctors
- *     description: Retrieves a list of all doctors from the system.
+ *     summary: Get all doctors with pagination
+ *     description: Fetch a list of doctors with pagination options.
  *     tags:
  *       - Doctors
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         required: false
+ *         description: The page number to retrieve (default is 1).
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *         required: false
+ *         description: The number of doctors to return per page (default is 10).
  *     responses:
  *       200:
  *         description: A list of doctors
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                     example: "60d5f4845c891f2c6c2c8b69"
- *                   name:
- *                     type: string
- *                     example: Dr. John Doe
- *                   email:
- *                     type: string
- *                     example: john.doe@example.com
- *                   speciality:
- *                     type: string
- *                     example: Cardiology
- *                   qualification:
- *                     type: string
- *                     example: MD
- *                   experience:
- *                     type: integer
- *                     example: 10
- *                   phonenumber:
- *                     type: string
- *                     example: "+1234567890"
- *                   address:
- *                     type: string
- *                     example: "123 Main St, City, Country"
- *                   timeslots:
- *                     type: array
- *                     items:
- *                       type: string
- *                       example: "09:00 AM - 11:00 AM"
+ *               type: object
+ *               properties:
+ *                 doctors:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Doctor'
+ *                 totalDoctors:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *                 totalPages:
+ *                   type: integer
  *       404:
  *         description: No doctors found
- *         content:
- *           text/plain:
- *             schema:
- *               type: string
- *               example: No doctors found
  *       500:
  *         description: Server error
- *         content:
- *           text/plain:
- *             schema:
- *               type: string
- *               example: Error message here
  */
 router.get("/doctors", isLoggedIn, getAllDoctors);
 
@@ -387,6 +371,37 @@ router.get("/doctors", isLoggedIn, getAllDoctors);
  *               example: "Error message here"
  */
 router.get("/doctor/:id", isLoggedIn, getDoctorById);
+
+/**
+ * @swagger
+ * /doctor:
+ *   get:
+ *     summary: Get doctors by name
+ *     description: Fetch a list of doctors filtered by their name
+ *     tags:
+ *       - Doctors
+ *     parameters:
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The name of the doctor to search for
+ *     responses:
+ *       200:
+ *         description: A list of doctors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Doctor'
+ *       404:
+ *         description: No doctors found
+ *       500:
+ *         description: Server error
+ */
+router.get("/search/", isLoggedIn, getDoctorsByName)
 
 
 /**
