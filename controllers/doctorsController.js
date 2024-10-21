@@ -7,9 +7,10 @@ module.exports.addDoctor = async (req, res) => {
         if (existingDoctor)
             return res.status(400).send("Doctor already exists");
 
-        let { name, email, speciality, qualification, experience, phonenumber, address, timeslots } = req.body;
-        let profilePhoto = req.file ? req.file.buffer : null;
-        let newDoctor = await doctorModel.create({
+        const { name, email, speciality, qualification, experience, phonenumber, address, timeslots } = req.body;
+        const imageBuffer = req.file.buffer; 
+        const imageMimetype = req.file.mimetype;
+        const newDoctor = await doctorModel.create({
             name,
             email,
             speciality,
@@ -18,7 +19,10 @@ module.exports.addDoctor = async (req, res) => {
             phonenumber,
             address,
             timeslots,
-            profilePhoto
+            profilePhoto :{
+                data: imageBuffer,    
+                contentType: imageMimetype 
+            }
         });
 
         const totalDoctors = await doctorModel.countDocuments();
@@ -48,7 +52,6 @@ module.exports.deleteDoctor = async (req, res) => {
         return res.status(500).send(err.message);
     }
 }
-
 
 module.exports.getAllDoctors = async (req, res) => {
     try {
@@ -93,7 +96,6 @@ module.exports.getAllDoctors = async (req, res) => {
         return res.status(500).send(err.message);
     }
 }
-
 
 module.exports.getDoctorById = async (req, res) => {
     try {

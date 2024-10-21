@@ -32,7 +32,8 @@ const doctorSchema = new mongoose.Schema({
     required: true
   },
   profilePhoto: {
-    type: Buffer
+    data: Buffer, 
+    contentType: String 
   },
   timeslots: [{
     day: {

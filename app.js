@@ -4,7 +4,7 @@ const cors = require("cors");
 const DBconnection = require("./config/connection")
 const adminRouter = require("./routes/adminRouter")
 const swaggerUi = require('swagger-ui-express');
-
+const path = require("path");
 
 
 const app = express();
@@ -16,7 +16,7 @@ app.use(cors());
 app.use("/admin", adminRouter);
 const swaggerDocs = require('./config/swaggerOptions'); 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 try {
