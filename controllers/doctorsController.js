@@ -8,8 +8,19 @@ module.exports.addDoctor = async (req, res) => {
             return res.status(400).send("Doctor already exists");
 
         const { name, email, speciality, qualification, experience, phonenumber, address, timeslots } = req.body;
-        const imageBuffer = req.file.buffer; 
-        const imageMimetype = req.file.mimetype;
+
+        const timeslotArray = JSON.parse(timeslots)
+
+        let profilePhoto = null;
+        if (req.file) {
+            const imageBuffer = req.file.buffer;
+            const imageMimetype = req.file.mimetype;
+            profilePhoto = {
+                data: imageBuffer,
+                contentType: imageMimetype
+            };
+        }
+
         const newDoctor = await doctorModel.create({
             name,
             email,
@@ -18,11 +29,8 @@ module.exports.addDoctor = async (req, res) => {
             experience,
             phonenumber,
             address,
-            timeslots,
-            profilePhoto :{
-                data: imageBuffer,    
-                contentType: imageMimetype 
-            }
+            timeslots: timeslotArray,
+            profilePhoto 
         });
 
         const totalDoctors = await doctorModel.countDocuments();
@@ -36,12 +44,13 @@ module.exports.addDoctor = async (req, res) => {
     } catch (err) {
         return res.status(500).send(err.message);
     }
-}
+};
+
 
 module.exports.deleteDoctor = async (req, res) => {
     try {
 
-        let doctor = await doctorModel.findOneAndDelete(req.params._id);
+        let doctor = await doctorModel.findByIdAndDelete(req.params.id);
 
         if (!doctor) {
             return res.status(404).send('Doctor not found');
@@ -97,23 +106,32 @@ module.exports.getAllDoctors = async (req, res) => {
     }
 }
 
+
 module.exports.getDoctorById = async (req, res) => {
     try {
-        let doctor = await doctorModel.findOne({
-            id: req.params._id
-        });
-        if (!doctor)
+        let doctor = await doctorModel.findById(req.params.id);
+        if (!doctor) {
             return res.status(404).send('Doctor not found');
+        }
         res.send(doctor);
     } catch (err) {
         return res.status(500).send(err.message);
     }
 }
 
+
 module.exports.updateDoctor = async (req, res) => {
     try {
         const updateFields = {};
-        let profilePhoto = req.file ? req.file.buffer : null;
+
+        if (req.file) {
+            const imageBuffer = req.file.buffer;
+            const imageMimetype = req.file.mimetype;
+            updateFields.profilePhoto = {
+                data: imageBuffer,
+                contentType: imageMimetype
+            };
+        }
 
         if (req.body.name) updateFields.name = req.body.name;
         if (req.body.email) updateFields.email = req.body.email;
@@ -122,11 +140,18 @@ module.exports.updateDoctor = async (req, res) => {
         if (req.body.experience) updateFields.experience = req.body.experience;
         if (req.body.phonenumber) updateFields.phonenumber = req.body.phonenumber;
         if (req.body.address) updateFields.address = req.body.address;
-        if (profilePhoto) updateFields.profilePhoto = profilePhoto;
-        if (req.body.timeslots) updateFields.timeslots = req.body.timeslots;
+        if (req.body.timeslots) updateFields.timeslots = req.body.timeslots
 
-        let updatedDoctor = await doctorModel.findOneAndUpdate(
-            { id: req.params._id },
+        if (req.body.timeslots) {
+            try {
+                updateFields.timeslots = JSON.parse(req.body.timeslots);
+            } catch (error) {
+                return res.status(400).send({ error: 'Invalid timeslots format' });
+            }
+        }
+
+        let updatedDoctor = await doctorModel.findByIdAndUpdate(
+            req.params.id, 
             updateFields,
             { new: true }
         );

@@ -32,21 +32,19 @@ const doctorSchema = new mongoose.Schema({
     required: true
   },
   profilePhoto: {
-    data: Buffer, 
-    contentType: String 
+    data: Buffer,
+    contentType: String
   },
   timeslots: [{
     day: {
       type: String,
-      required: true
+      enum: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     },
     startTime: {
       type: String,
-      required: true
     },
     endTime: {
       type: String,
-      required: true
     }
   }],
   reviews: [{
@@ -66,6 +64,3 @@ const doctorSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model("Doctor", doctorSchema);
-
-
-
